@@ -1,5 +1,4 @@
-# HandyScripts
-
+# WSL scripts
 ## stop_wsl.bat
 
 A batch script to stop the Windows Subsystem for Linux (WSL).
