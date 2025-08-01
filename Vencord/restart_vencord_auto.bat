@@ -5,7 +5,7 @@ setlocal
 set "userDir=%USERPROFILE%"
 
 :: Sett mapper vi vil søke i
-set "searchDirs=%userDir%\Desktop %userDir%\Downloads %userDir%\Documents %userDir%\OneDrive %userDir%\Documents\Taskbar_Start11\Scripts"
+set "searchDirs=%userDir%\Desktop %userDir%\Downloads %userDir%\Documents %userDir%\OneDrive %userDir%\AppData\Local\Programs\Vencord %userDir%\AppData\Roaming\Vencord"
 
 :: Sett tom variabel
 set "foundFile="
