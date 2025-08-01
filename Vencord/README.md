@@ -3,9 +3,9 @@
 This folder contains batch scripts for managing Vencord, a Discord client modification.
 
 ## Scripts Intendedness 
-This script is intended for when Discord is updated, which forces the need to re-inject  Vencord.
+These scripts are intended for when Discord is updated, which forces the need to re-inject  Vencord.
 
-This script makes it super easy to reapply vencord with just a click.
+They makes it super easy to reapply vencord with just a click.
 
 ## Requirements
 
