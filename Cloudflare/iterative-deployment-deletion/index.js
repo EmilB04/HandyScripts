@@ -12,6 +12,11 @@ const prompt = (question, defaultValue) =>
     })
   })
 
+const confirm = async (question) => {
+  const answer = await prompt(`${question} (y/n)`, 'y')
+  return answer.toLowerCase().startsWith('y')
+}
+
 const MAX_ATTEMPTS = 5
 
 const DEPLOYMENTS_PER_PAGE = 10
@@ -127,14 +132,7 @@ async function listNextDeployments() {
   }
 }
 
-async function deleteBatch(deploymentIds) {
-  const productionDeploymentId = await getProductionDeploymentId()
-  if (productionDeploymentId !== null) {
-    console.log(
-      `Found live production deployment to exclude from deletion: ${productionDeploymentId}`
-    )
-  }
-
+async function deleteBatch(deploymentIds, productionDeploymentId) {
   for (const id of deploymentIds) {
     if (productionDeploymentId !== null && id === productionDeploymentId) {
       console.log(`Skipping production deployment: ${id}`)
@@ -150,16 +148,15 @@ async function deleteBatch(deploymentIds) {
 }
 
 async function main() {
+  console.log('--- Cloudflare Pages credentials (Dashboard > project > Settings > General) ---')
   config.CF_API_TOKEN = process.env.CF_API_TOKEN ||
-    await prompt('Cloudflare API Token')
+    await prompt('Cloudflare API Token (dash.cloudflare.com > My Profile > API Tokens > Create Token)')
   config.CF_ACCOUNT_ID = process.env.CF_ACCOUNT_ID ||
-    await prompt('Cloudflare Account ID')
+    await prompt('Cloudflare Account ID (dash.cloudflare.com > right sidebar of any domain/Pages overview)')
   config.CF_PAGES_PROJECT_NAME = process.env.CF_PAGES_PROJECT_NAME ||
-    await prompt('Cloudflare Pages Project Name')
+    await prompt('Cloudflare Pages Project Name (Workers & Pages list, or the slug in your *.pages.dev URL)')
   config.CF_DELETE_ALIASED_DEPLOYMENTS = process.env.CF_DELETE_ALIASED_DEPLOYMENTS ||
-    await prompt('Delete aliased deployments? (true/false)', 'true')
-
-  rl.close()
+    await prompt('Delete aliased deployments too? (true/false)', 'true')
 
   if (!config.CF_API_TOKEN) {
     throw new Error('Please provide a Cloudflare API Token')
@@ -171,11 +168,25 @@ async function main() {
     throw new Error('Please provide a Cloudflare Pages Project Name')
   }
 
+  const productionDeploymentId = await getProductionDeploymentId()
+  if (productionDeploymentId !== null) {
+    console.log(`Live production deployment (kept, never deleted): ${productionDeploymentId}`)
+  }
+
   let deploymentIds = await listNextDeployments()
   while (deploymentIds.length > 1) { // Ignoring live production deployment
-    await deleteBatch(deploymentIds)
+    const toDelete = deploymentIds.filter((id) => id !== productionDeploymentId)
+    console.log(`\nNext batch: ${toDelete.length} deployment(s) will be deleted.`)
+    const proceed = await confirm('Proceed with deleting this batch?')
+    if (!proceed) {
+      console.log('Stopped. Re-run the script to continue deleting later.')
+      break
+    }
+    await deleteBatch(deploymentIds, productionDeploymentId)
     deploymentIds = await listNextDeployments()
   }
+
+  rl.close()
 }
 
 main()
